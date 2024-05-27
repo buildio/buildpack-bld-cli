@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+echo 'Build.io CLI'
+exit 0

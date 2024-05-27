@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+# bin/compile <build-dir> <cache-dir> <env-dir>
+
+set -euo pipefail
+
+function indent() {
+  c='s/^/       /'
+  case $(uname) in
+    Darwin) sed -l "$c";;
+    *)      sed -u "$c";;
+  esac
+}
+
+BUILD_DIR=$1
+BUILD_CLI_URL="https://github.com/buildio/bins/releases/latest/download/bld-linux-amd64.zip"
+
+BUILDPACK_DIR="$(dirname $(dirname $0))"
+INSTALL_DIR="/app/.bldcli"
+TMP_DIR=$(mktemp -d)
+
+echo "-----> Downloading Build.io CLI"
+curl --silent --show-error --fail -o "${TMP_DIR}/bldcli.zip" "${BUILD_CLI_URL}" |& indent
+unzip -qq -d "${TMP_DIR}" "${TMP_DIR}/bldcli.zip" |& indent
+
+echo "-----> Installing Build.io CLI"
+mkdir -p "${BUILD_DIR}/.bldcli"
+
+if [[ "${BUILD_DIR}" != /app ]]; then
+  mkdir -p /app
+  ln -nsf "${BUILD_DIR}/.bldcli" "${INSTALL_DIR}"
+fi
+
+"${TMP_DIR}/bld/install" --install-dir "${INSTALL_DIR}/bld-cli" --bin-dir "${INSTALL_DIR}/bin" |& indent
+/app/.bldcli/bin/bld --version |& indent
+
+mkdir -p "${BUILD_DIR}/.profile.d"
+cat > "${BUILD_DIR}/.profile.d/bldcli.sh" <<'PROFILE'
+export PATH="/app/.bldcli/bin:${PATH}"
+PROFILE
+
+cat > "${BUILDPACK_DIR}/export" <<'EXPORT'
+export PATH="/app/.bldcli/bin:${PATH}"
+EXPORT
+
+rm -rf "${TMP_DIR}"
+
+echo "-----> Successfully installed Build.io CLI"
+echo "       Run 'bld --version' to check the version"
