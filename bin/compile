@@ -31,7 +31,14 @@ if [[ "${BUILD_DIR}" != /app ]]; then
   ln -nsf "${BUILD_DIR}/.bldcli" "${INSTALL_DIR}"
 fi
 
-"${TMP_DIR}/bld/install" --install-dir "${INSTALL_DIR}/bld-cli" --bin-dir "${INSTALL_DIR}/bin" |& indent
+# If there is an install script, run it, otherwise just copy the binary:
+if [[ -f "${TMP_DIR}/bld/install" ]]; then
+  "${TMP_DIR}/bld/install" --install-dir "${INSTALL_DIR}/bld-cli" --bin-dir "${INSTALL_DIR}/bin" |& indent
+else
+  # Put the binary in the bin directory:
+  mkdir -p "${INSTALL_DIR}/bin"
+  cp "${TMP_DIR}/bld" "${INSTALL_DIR}/bin"
+fi
 /app/.bldcli/bin/bld --version |& indent
 
 mkdir -p "${BUILD_DIR}/.profile.d"
@@ -46,4 +53,3 @@ EXPORT
 rm -rf "${TMP_DIR}"
 
 echo "-----> Successfully installed Build.io CLI"
-echo "       Run 'bld --version' to check the version"
