@@ -19,7 +19,8 @@ INSTALL_DIR="/app/.bldcli"
 TMP_DIR=$(mktemp -d)
 
 echo "-----> Downloading Build.io CLI"
-curl --silent --show-error --fail -o "${TMP_DIR}/bldcli.zip" "${BUILD_CLI_URL}" |& indent
+# -L -> Allows redirect...
+curl -L --silent --show-error --fail -o "${TMP_DIR}/bldcli.zip" "${BUILD_CLI_URL}" |& indent
 unzip -qq -d "${TMP_DIR}" "${TMP_DIR}/bldcli.zip" |& indent
 
 echo "-----> Installing Build.io CLI"
